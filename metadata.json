@@ -1,0 +1,8 @@
+{
+  "name": "SoulAI",
+  "description": "An AI-enhanced dating platform featuring intelligent icebreakers, profile optimization, and smart compatibility matching powered by Gemini.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
