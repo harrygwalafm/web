@@ -8,12 +8,26 @@ export interface Profile {
   imageUrl: string;
   location: string;
   occupation: string;
+  gender?: 'male' | 'female' | 'non-binary' | 'other';
+  interestedIn?: ('male' | 'female' | 'non-binary' | 'other')[];
+  isVerified?: boolean;
+  role?: 'user' | 'admin';
+}
+
+export interface Report {
+  id: string;
+  reporterId: string;
+  targetId: string;
+  reason: string;
+  timestamp: number;
+  status: 'pending' | 'resolved';
 }
 
 export interface Message {
   id: string;
   senderId: string;
-  text: string;
+  text?: string;
+  imageUrl?: string;
   timestamp: number;
 }
 
@@ -24,8 +38,11 @@ export interface Match {
   timestamp: number;
 }
 
-export type View = 'discover' | 'matches' | 'profile' | 'chat';
+export type View = 'discover' | 'matches' | 'profile' | 'chat' | 'videoCall' | 'admin';
 
-export interface ChatContext {
-  activeMatchId: string | null;
+export interface Filters {
+  minAge: number;
+  maxAge: number;
+  maxDistance: number;
+  interestMatch: boolean;
 }

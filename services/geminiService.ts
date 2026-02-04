@@ -2,14 +2,15 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Profile } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Always initialize GoogleGenAI with exactly { apiKey: process.env.API_KEY }
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const getIcebreaker = async (myProfile: Profile, targetProfile: Profile): Promise<string> => {
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `
-        You are a dating coach wingman. 
+        You are a dating coach wingman for the NMZ Mingle app. 
         My profile: ${JSON.stringify(myProfile)}
         Target's profile: ${JSON.stringify(targetProfile)}
         
@@ -24,12 +25,24 @@ export const getIcebreaker = async (myProfile: Profile, targetProfile: Profile):
   }
 };
 
+export const rewriteBio = async (currentBio: string, vibe: string): Promise<string> => {
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Rewrite this dating app bio for NMZ Mingle to be ${vibe}: "${currentBio}". Keep it under 150 characters and very engaging.`,
+    });
+    return response.text || currentBio;
+  } catch (error) {
+    return currentBio;
+  }
+};
+
 export const getProfileAdvice = async (profile: Profile): Promise<string> => {
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `
-        Analyze this dating profile bio and interests:
+        Analyze this NMZ Mingle dating profile bio and interests:
         Bio: ${profile.bio}
         Interests: ${profile.interests.join(', ')}
         
@@ -49,7 +62,7 @@ export const getCompatibilityScore = async (p1: Profile, p2: Profile): Promise<{
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `
-        Compare these two profiles for a dating app:
+        Compare these two profiles for the NMZ Mingle dating app:
         Profile 1: ${JSON.stringify(p1)}
         Profile 2: ${JSON.stringify(p2)}
         
@@ -72,5 +85,32 @@ export const getCompatibilityScore = async (p1: Profile, p2: Profile): Promise<{
     return JSON.parse(response.text || '{"score": 75, "reason": "You both seem active!"}');
   } catch (error) {
     return { score: 70, reason: "You both have interesting backgrounds!" };
+  }
+};
+
+export const findDateSpots = async (interest: string, lat: number, lng: number) => {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `Find 3 amazing date spots nearby for people on NMZ Mingle who love ${interest}.`,
+      config: {
+        tools: [{ googleMaps: {} }],
+        toolConfig: {
+          retrievalConfig: {
+            latLng: { latitude: lat, longitude: lng }
+          }
+        }
+      },
+    });
+    
+    const text = response.text;
+    const links = response.candidates?.[0]?.groundingMetadata?.groundingChunks?.map((chunk: any) => ({
+      title: chunk.maps?.title,
+      uri: chunk.maps?.uri
+    })).filter((c: any) => c.title) || [];
+
+    return { text, links };
+  } catch (error) {
+    return { text: "I couldn't find specific spots right now, but a local coffee shop is always a classic!", links: [] };
   }
 };
